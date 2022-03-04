@@ -260,7 +260,7 @@ def get_result():
     print("mean: ",mean)
 
     # calcualte SD
-    sd_hist_return = hist_stock_returns.std()
+    sd_hist_return = histstock_returns.std()
     print("sd_hist_return: ",sd_hist_return)
     # Risk free factor.
     rf = 0.0094
@@ -283,7 +283,7 @@ def get_result():
     while (expected_risk > accepted_risk or abs(previous_risk-expected_risk)>0.005):
 
         previous_return = expected_return
-        previous_risk = expected_risk
+        previous_risk = epected_risk
         print('Iteration:', iteration)
         expected_return = mean_portfolio_return(elite[0], changed_mean)
         expected_risk = np.sqrt(var_portfolio_return(elite[0], changed_cov, changed_sd))
@@ -296,7 +296,7 @@ def get_result():
         # else:
         #     expected_risk = np.sqrt(var_portfolio_return(elite[0]))
         population = next_generation(1000, elite, Arithmetic_crossover)
-        elite = Select_elite_population(population, accepted_risk)
+        elite = Select_elite_opulation(population, accepted_risk)
         print('Expected returns of {} with risk of {}\n'.format(expected_return, expected_risk))
         iteration += 1
 
@@ -311,12 +311,6 @@ def get_result():
     print(result)
     expected_return = str("{:.3f}".format(expected_return))
     expected_risk = str("{:.3f}".format(expected_risk))
-    if(changed_cov and changed_mean):
-        return jsonify(result,expected_return,expected_risk,changed_cov,changed_mean,cov,mean,number_of_stocks,new_label)
-    if(changed_cov):
-        return jsonify(result,expected_return,expected_risk,changed_cov,mean,cov,mean,number_of_stocks,new_label)
-    if(changed_mean):
-        return jsonify(result,expected_return,expected_risk,cov,changed_mean,cov,mean,number_of_stocks,new_label)
     return jsonify(result,expected_return,expected_risk,cov,mean,cov,mean,number_of_stocks,new_label)
 
 if __name__ == "__main__":
