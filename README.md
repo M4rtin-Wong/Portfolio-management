@@ -5,4 +5,3 @@
 # frontend:
  users can choose stocks, the program will return the portfolio and be shown as a pie chart.
 
-# This project is not yet finished, some code needed to be updated.

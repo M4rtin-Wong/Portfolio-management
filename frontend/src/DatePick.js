@@ -11,15 +11,22 @@ import LocalizationProvider from "@mui/lab/LocalizationProvider";
 
 
 class DatePick extends React.Component {
-
+  getRandomColor() {
+    var letters = "0123456789ABCDEF".split("");
+    var color = "#";
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
   render() {
     return (
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <DatePicker
           label="Start"
           views={["year", "month"]}
-          minDate={new Date("2015-01-01")}
-          maxDate={new Date("2021-08-01")}
+          minDate={new Date("2008-01-01")}
+          maxDate={new Date("2021-12-01")}
           value={this.props.dateStart}
           onChange={(e) => this.props.handleChangeDateStart(e)}
           renderInput={(params) => <TextField {...params} helperText={null} />}
@@ -28,8 +35,8 @@ class DatePick extends React.Component {
         <DatePicker
           label="End"
           views={["year", "month"]}
-          minDate={new Date("2015-02-01")}
-          maxDate={new Date("2021-09-01")}
+          minDate={new Date("2008-02-01")}
+          maxDate={new Date("2022-01-01")}
           value={this.props.dateEnd}
           onChange={(e) => this.props.handleChangeDateEnd(e)}
           renderInput={(params) => <TextField {...params} helperText={null} />}

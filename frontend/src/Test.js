@@ -1,4 +1,7 @@
 // import logo from "./logo.svg";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
+
 import ShowTable from "./ShowTable";
 import DatePick from "./DatePick";
 import PieChart from "./PieChart";
@@ -43,6 +46,12 @@ class Portfolio extends React.Component {
       mean: [],
       changeMean: [],
       inputRisk: 0,
+      inputCash: 0,
+
+      errorOccured: false,
+      errorRisk: false,
+      errorStock: false,
+      errorCovOrReturn: false,
     };
     // this.returnToDefault = this.returnToDefault.bind(this);
     this.handleChangeDateStart = this.handleChangeDateStart.bind(this);
@@ -51,6 +60,14 @@ class Portfolio extends React.Component {
     this.handleChangeMean = this.handleChangeMean.bind(this);
     this.returnToDefault = this.returnToDefault.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.DateSnackbarOpen = this.DateSnackbarOpen.bind(this);
+    this.DateSnackbarClose = this.DateSnackbarClose.bind(this);
+    this.RiskSnackbarOpen = this.RiskSnackbarOpen.bind(this);
+    this.RiskSnackbarClose = this.RiskSnackbarClose.bind(this);
+    this.StockSnackbarOpen = this.StockSnackbarOpen.bind(this);
+    this.StockSnackbarClose = this.StockSnackbarClose.bind(this);
+    this.CovOrReturnSnackbarOpen = this.CovOrReturnSnackbarOpen.bind(this);
+    this.CovOrReturnSnackbarClose = this.CovOrReturnSnackbarClose.bind(this);
   }
 
   handleChangeCov(value, covIndex, index) {
@@ -59,8 +76,10 @@ class Portfolio extends React.Component {
     // use ths method to clone an array of objects.
     // otherwise, you will make a reference copy and will affect the second array.
     this.state.changeCov.forEach((val) => oldCov.push(Object.assign([], val)));
-    oldCov[covIndex][index] = parseFloat(value);
-    oldCov[index][covIndex] = parseFloat(value);
+    // oldCov[covIndex][index] = parseFloat(value);
+    // oldCov[index][covIndex] = parseFloat(value);
+    oldCov[covIndex][index] = value;
+    oldCov[index][covIndex] = value;
 
     this.setState({ changeCov: oldCov });
     console.log("this.state.changeCov", this.state.changeCov);
@@ -68,7 +87,7 @@ class Portfolio extends React.Component {
   handleChangeMean(value, index) {
     console.log(value, index);
     let changeMean = [...this.state.changeMean];
-    changeMean[index] = parseFloat(value);
+    changeMean[index] = value;
     this.setState({ changeMean });
     console.log("this.state.changeMean", this.state.changeMean);
   }
@@ -116,9 +135,48 @@ class Portfolio extends React.Component {
     // this.state.changeCov = parseFloat(this.state.changeCov);
     // console.log("float cov",this.state.changeCov);
     // changeCov[index][covIndex] = parseFloat(value);
-    this.setState({isSubmitted: true})
+    this.setState({ isSubmitted: true });
+    if (this.state.dateStart == "" || this.state.dateEnd == "") {
+      this.DateSnackbarOpen();
+      this.setState({ isSubmitted: false });
+    }
+    if (isNaN(this.state.inputRisk) ||this.state.inputRisk == 0 || this.state.inputRisk < 0 ||this.state.inputRisk > 1 ){
+      this.RiskSnackbarOpen();
+      this.setState({ isSubmitted: false });
+    }
+    if(this.state.stock.includes("") ){
+      this.StockSnackbarOpen();
+      this.setState({ isSubmitted: false });
+    }
+    for (let arr = 0; arr < this.state.changeCov.length; arr++){
+      for (let item = 0; item < this.state.changeCov[arr].length; item++){
+        if(!isNaN(this.state.changeCov[arr][item])){
+          this.state.changeCov[arr][item] = parseFloat(this.state.changeCov[arr][item])
+        }
+        else{
+          this.CovOrReturnSnackbarOpen();
+          this.setState({ isSubmitted: false });
+        }
+      }
+      // this.state.changeCov[arr] = parseFloat(this.state.changeCov[arr])
+    }
+
+    for (let item = 0; item < this.state.changeMean.length; item++){
+      if(!isNaN(this.state.changeMean[item])){
+        this.state.changeMean[item] = parseFloat(this.state.changeMean[item])
+      }
+      else{
+        this.CovOrReturnSnackbarOpen();
+        this.setState({ isSubmitted: false });
+      }
+    }
+
+    console.log("this.state.changeCov:",this.state.changeCov)
+    console.log("this.state.changemean:",this.state.changeMean)
+    
     axios
       .post("http://127.0.0.1:8000/result", {
+        cash: this.state.inputCash,
         risk: this.state.inputRisk,
         stock: this.state.stock,
         dateStart: this.state.dateStart,
@@ -168,19 +226,116 @@ class Portfolio extends React.Component {
         console.log(err);
       });
   }
-  getRandomColor() {
-    var letters = "0123456789ABCDEF".split("");
-    var color = "#";
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+  DateSnackbarOpen() {
+    this.setState({ errorDate: true });
+  }
+  DateSnackbarClose() {
+    this.setState({ errorDate: false });
+  }
+
+  RiskSnackbarOpen() {
+    this.setState({ errorRisk: true });
+  }
+  RiskSnackbarClose() {
+    this.setState({ errorRisk: false });
+  }
+  
+
+  StockSnackbarOpen() {
+    this.setState({ errorStock: true });
+  }
+  StockSnackbarClose() {
+    this.setState({ errorStock: false });
+  }
+
+  CovOrReturnSnackbarOpen() {
+    this.setState({ errorCovOrReturn: true });
+  }
+  CovOrReturnSnackbarClose() {
+    this.setState({ errorCovOrReturn: false });
   }
 
   render() {
     return (
       <>
         <Box sx={{ flexGrow: 1 }} class="box-padding">
+          <Snackbar
+            sx={{ height: "100%" }}
+            open={this.state.errorDate}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+            autoHideDuration={6000}
+            onClose={this.DateSnackbarClose}
+          >
+            <Alert
+              onClose={this.DateSnackbarClose}
+              severity="warning"
+              sx={{ width: "100%" }}
+            >
+              Please select a valid date!
+            </Alert>
+          </Snackbar>
+
+          <Snackbar
+            sx={{ height: "100%" }}
+            open={this.state.errorRisk}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+            autoHideDuration={6000}
+            onClose={this.RiskSnackbarClose}
+          >
+            <Alert
+              onClose={this.RiskSnackbarClose}
+              severity="warning"
+              sx={{ width: "100%" }}
+            >
+              Please input a valid accepted risk! Risk should between 0 and 1.
+            </Alert>
+          </Snackbar>
+          
+
+          <Snackbar
+            sx={{ height: "100%" }}
+            open={this.state.errorStock}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+            autoHideDuration={6000}
+            onClose={this.StockSnackbarClose}
+          >
+            <Alert
+              onClose={this.StockSnackbarClose}
+              severity="warning"
+              sx={{ width: "100%" }}
+            >
+              Please select a valid stock! Make sure the stock is not empty!
+            </Alert>
+          </Snackbar>
+          
+          <Snackbar
+            sx={{ height: "100%" }}
+            open={this.state.errorCovOrReturn}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+            autoHideDuration={6000}
+            onClose={this.CovOrReturnSnackbarClose}
+          >
+            <Alert
+              onClose={this.CovOrReturnSnackbarClose}
+              severity="warning"
+              sx={{ width: "100%" }}
+            >
+              Please input valid covariance or expected return! Covariance and Expected return must be numbers!
+            </Alert>
+          </Snackbar>
+
           <Grid container spacing={2}>
             <Grid item xs={8}>
               <DatePick
@@ -199,6 +354,7 @@ class Portfolio extends React.Component {
                 onChange={(e) => this.setState({ inputRisk: e.target.value })}
               />
             </Grid>
+
             <form
               class="show-form"
               // sx={{ m: 1, width: 300 }}
@@ -253,7 +409,8 @@ class Portfolio extends React.Component {
                 pieData={this.state.pieData}
               />
             </div>
-            {this.state.isSubmitted &&(
+
+            {this.state.isSubmitted && (
               <div>
                 <CircularProgress class="progress" size={"7%"} />
               </div>
@@ -279,17 +436,48 @@ class Portfolio extends React.Component {
     );
   }
 }
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 const stockData = [
-  { industry: "燃氣供應", label: "0003.香港中華煤氣" },
-  { industry: "地產發展商", label: "0012.恆基地產" },
-  { industry: "電子零件", label: "2382.舜宇光學科技" },
-  { industry: "公共運輸", label: "0066.港鐵公司" },
-  { industry: "綜合企業", label: "0001.長和" },
-  { industry: "其他金融", label: "0388.香港交易所" },
-  { industry: "電子商貿及互聯網服務", label: "0700.騰訊控股" },
-  { industry: "銀行", label: "3968.招商銀行" },
-  { industry: "銀行", label: "0011.恆生銀行" },
-  { industry: "電力", label: "0002.中電控股" },
+  { industry: "燃氣供應", label: "0003.香港中華煤氣" ,lot:1000},
+  { industry: "燃氣供應", label: "2688.新奧能源", lot: 100},
+  { industry: "燃氣供應", label: "0384.中國燃氣", lot: 200},
+
+  { industry: "地產發展商", label: "0012.恆基地產", lot: 1000},
+  // { industry: "地產發展商", label: "0960.龍湖集團", lot: 500},
+  { industry: "地產發展商", label: "1109.華潤置地", lot: 2000},
+  { industry: "地產發展商", label: "0016.新鴻基地產", lot: 500},
+
+  { industry: "電子零件", label: "2382.舜宇光學科技", lot: 100},
+  { industry: "電子零件", label: "2018.瑞聲科技", lot: 500},
+
+  { industry: "公共運輸", label: "0066.港鐵公司", lot: 500},
+  { industry: "公共運輸", label: "0525.廣深鐵路股份", lot: 2000},
+
+  { industry: "綜合企業", label: "0001.長和", lot: 500},
+
+  { industry: "其他金融", label: "0388.香港交易所", lot: 100},
+
+  { industry: "汽車", label: "1211.比亞迪股份", lot: 500},
+
+  { industry: "電子商貿及互聯網服務", label: "0700.騰訊控股", lot: 100},
+  { industry: "電子商貿及互聯網服務", label: "1137.香港科技探索", lot: 1000},
+
+  { industry: "銀行", label: "3968.招商銀行", lot: 500},
+  { industry: "銀行", label: "0011.恆生銀行", lot: 100},
+  { industry: "銀行", label: "1398.工商銀行", lot: 1000},
+  { industry: "銀行", label: "0939.建設銀行", lot: 1000},
+  { industry: "銀行", label: "2388.中銀香港", lot: 500},
+
+  { industry: "電力", label: "0002.中電控股", lot: 500},
+  { industry: "電力", label: "1038.長江基建集團", lot: 500},
+  { industry: "電力", label: "0006.電能實業", lot: 500},
+
+  { industry: "半導體", label: "0522.ASM太平洋", lot: 100},
+  { industry: "半導體", label: "1385.上海復旦", lot: 2000},
+  { industry: "半導體", label: "0981.中芯國際", lot: 500},
 ];
 const styles = StyleSheet.create({
   baseText: {
