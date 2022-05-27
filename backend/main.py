@@ -4,7 +4,6 @@ import pandas as pd
 from functools import reduce
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-# from DQN import Agent
 
 app = Flask(__name__)
 CORS(app)
